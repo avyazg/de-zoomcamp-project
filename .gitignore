@@ -2,3 +2,5 @@
 *.tfstate.*
 **.terraform
 **.terraform.lock.*
+/airflow/logs/*
+*__pycache__*
