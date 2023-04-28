@@ -1,15 +1,14 @@
 import os
 from datetime import datetime
-import requests
-from io import BytesIO
 
 from airflow import DAG
-from airflow.operators.python import PythonOperator
+from airflow.operators.bash import BashOperator
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 
 PROJECT_ID = os.environ.get("GCP_PROJECT_ID")
 BUCKET = os.environ.get("GCP_GCS_BUCKET")
-BIGQUERY_DATASET = os.environ.get("BIGQUERY_DATASET", 'de_project_dataset')
+BIGQUERY_DATASET = os.environ.get("BIGQUERY_DATASET")
+SPARK_CLUSTER = os.environ.get("SPARK_CLUSTER")
 
 locations = ['Ankara, Turkey', 'Istanbul, Turkey', 'Antalya, Turkey']
 
@@ -28,6 +27,8 @@ with DAG(
     max_active_runs=1,
     tags=['de-project'],
 ) as dag:
+    
+    bq_create_partitioned_table_task_list = []
 
     for loc in locations:
         city = loc.split(', ')[0]
@@ -51,6 +52,25 @@ with DAG(
             }
         )
 
-        bq_create_partitioned_table_task
+        bq_create_partitioned_table_task_list.append(bq_create_partitioned_table_task)
+
+    temp_bucket = os.popen('gcloud storage buckets list | grep "id: dataproc-temp"')
+    temp_bucket = [line[4:-1] for line in temp_bucket][0]
+
+    command = f"""gcloud dataproc jobs submit pyspark \
+                --cluster={SPARK_CLUSTER} \
+                --region=europe-west1 \
+                --jars=gs://spark-lib/bigquery/spark-bigquery-latest_2.12.jar \
+                gs://{BUCKET}/code/data_transform_spark.py" \
+                -- \
+                --temp_bucket={temp_bucket} \
+                --dataset={BIGQUERY_DATASET}"""
+
+    run_pyspark_script_task = BashOperator(
+        task_id="run_pyspark_script",
+        bash_command=command
+    )
+
+    bq_create_partitioned_table_task_list >> run_pyspark_script_task
 
 
