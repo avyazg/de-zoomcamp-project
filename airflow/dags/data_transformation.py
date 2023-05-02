@@ -14,14 +14,14 @@ locations = ['Ankara, Turkey', 'Istanbul, Turkey', 'Antalya, Turkey']
 
 default_args = {
     "owner": "airflow",
-    "start_date": datetime(2022,3,1),
+    "start_date": datetime(2022,6,1),
     "depends_on_past": False,
     "retries": 1,
 }
 
 with DAG(
     dag_id="weather_data_transform",
-    schedule_interval="0 15 1 * *",
+    schedule_interval="0 9 1 * *",
     default_args=default_args,
     catchup=True,
     max_active_runs=1,
@@ -54,17 +54,17 @@ with DAG(
 
         bq_create_partitioned_table_task_list.append(bq_create_partitioned_table_task)
 
-    temp_bucket = os.popen('gcloud storage buckets list | grep "id: dataproc-temp"')
-    temp_bucket = [line[4:-1] for line in temp_bucket][0]
+    # temp_bucket = os.popen('gcloud storage buckets list | grep "id: dataproc-temp"')
+    # temp_bucket = [line[4:-1] for line in temp_bucket][0]
 
     command = f"""gcloud dataproc jobs submit pyspark \
                 --cluster={SPARK_CLUSTER} \
                 --region=europe-west1 \
                 --jars=gs://spark-lib/bigquery/spark-bigquery-latest_2.12.jar \
-                gs://{BUCKET}/code/data_transform_spark.py" \
+                gs://{BUCKET}/code/data_transform_spark.py \
                 -- \
-                --temp_bucket={temp_bucket} \
                 --dataset={BIGQUERY_DATASET}"""
+                # --temp_bucket={temp_bucket} \
 
     run_pyspark_script_task = BashOperator(
         task_id="run_pyspark_script",

@@ -19,9 +19,7 @@ PROJECT_ID = os.environ.get("GCP_PROJECT_ID")
 BUCKET = os.environ.get("GCP_GCS_BUCKET")
 
 URL = "https://visual-crossing-weather.p.rapidapi.com/history"
-
-# ! hide this !
-API_KEY = '59206abbb9msh136535c8e35c2b6p19221djsn0fc4952c4477'
+API_KEY = os.environ.get("RAPIDAPI_KEY")
 
 last_day_of_month = '{{ macros.ds_add(ds, -1) }}'
 
@@ -30,7 +28,7 @@ locations = ['Ankara, Turkey', 'Istanbul, Turkey', 'Antalya, Turkey']
 # dataset_url = url_start + dataset_file
 path_to_local_home = os.environ.get("AIRFLOW_HOME", "/opt/airflow/")
 # parquet_file = dataset_file.replace('.csv.gz', '.parquet')
-BIGQUERY_DATASET = os.environ.get("BIGQUERY_DATASET", 'de_project_dataset')
+BIGQUERY_DATASET = os.environ.get("BIGQUERY_DATASET")
 
 # def get_last_day_of_month(any_day):
     
@@ -114,7 +112,7 @@ def upload_to_gcs(bucket, last_day_of_month: str, locations: list):
 
 default_args = {
     "owner": "airflow",
-    "start_date": datetime(2022,3,1),
+    "start_date": datetime(2022,6,1),
     "depends_on_past": False,
     "retries": 1,
 }
@@ -122,7 +120,7 @@ default_args = {
 # NOTE: DAG declaration - using a Context Manager (an implicit way)
 with DAG(
     dag_id="weather_data_ingestion",
-    schedule_interval="0 12 1 * *",
+    schedule_interval="0 6 1 * *",
     default_args=default_args,
     catchup=True,
     max_active_runs=1,
