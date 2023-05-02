@@ -5,7 +5,6 @@ from pyspark.sql import functions as F
 import argparse
 
 parser = argparse.ArgumentParser()
-# parser.add_argument('--temp_bucket', required=True)
 parser.add_argument('--dataset', required=True)
 args = parser.parse_args()
 
@@ -13,18 +12,9 @@ spark = SparkSession.builder \
     .appName('weather_aggregating') \
     .getOrCreate()
 
-# spark.conf.set('temporaryGcsBucket', args.temp_bucket)
 spark.conf.set("viewsEnabled", "true")
 spark.conf.set("materializationDataset", args.dataset)
 
-# data = [("James","","Smith","36636","M",3000),
-#     ("Michael","Rose","","40288","M",4000)]
-# df = spark.createDataFrame(data=data)
-# df.show()
-
-# data = spark.read.format('bigquery') \
-#   .option('table', args.dataset+'.Ankara_data') \
-#   .load()
 sql = f"""
   WITH union_data AS (
     SELECT *, date_trunc(date_time, month) AS month_1st

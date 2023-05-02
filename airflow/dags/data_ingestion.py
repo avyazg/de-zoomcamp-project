@@ -4,8 +4,6 @@ import requests
 from io import BytesIO
 
 from airflow import DAG
-# from airflow.utils.dates import days_ago
-# from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
 
 from google.cloud import storage
@@ -25,24 +23,11 @@ last_day_of_month = '{{ macros.ds_add(ds, -1) }}'
 
 locations = ['Ankara, Turkey', 'Istanbul, Turkey', 'Antalya, Turkey']
 
-# dataset_url = url_start + dataset_file
 path_to_local_home = os.environ.get("AIRFLOW_HOME", "/opt/airflow/")
-# parquet_file = dataset_file.replace('.csv.gz', '.parquet')
 BIGQUERY_DATASET = os.environ.get("BIGQUERY_DATASET")
-
-# def get_last_day_of_month(any_day):
-    
-#     any_day = datetime.strptime(any_day, '%Y-%M-%d')
-#     # The day 28 exists in every month. 4 days later, it's always next month
-#     next_month = any_day.replace(day=28) + timedelta(days=4)
-#     # subtracting the number of the current day brings us back one month
-#     last_day = next_month - timedelta(days=next_month.day)
-    
-#     return last_day.strftime('%Y-%M-%d')
 
 
 def get_weather_data(last_day_of_month: str, location: str) -> str:
-    # first_day_of_month = year_month + '-01'
     first_day_of_month = last_day_of_month[:-2] + '01'
 
     querystring = {"startDateTime": first_day_of_month+'T00:00:00',
@@ -50,9 +35,7 @@ def get_weather_data(last_day_of_month: str, location: str) -> str:
                    "unitGroup": "metric",               
                    "aggregateHours": "2",
                    "location": location,
-#                "dayStartTime":"0:00:00",
                    "contentType":"csv",
-#                "dayEndTime":"23:00:00",
                    "shortColumnNames":"0"}
 
     headers = {
@@ -69,8 +52,6 @@ def write_parquet(last_day_of_month: str, locations: list) -> None:
 
     needed_columns = ['Address', 'Date time', 'Temperature', 'Relative Humidity', 'Wind Speed', 'Precipitation', 'Sea Level Pressure', 'Conditions']
     renamed_columns = [col.lower().replace(' ','_') for col in needed_columns]
-    # with open('/opt/airflow/logs/ldm.txt', 'w') as f:
-    #     f.write(last_day_of_month)
     for loc in locations:
         csv_text = get_weather_data(last_day_of_month, loc)
         csv_io = BytesIO(csv_text.encode())
@@ -82,8 +63,6 @@ def write_parquet(last_day_of_month: str, locations: list) -> None:
         pq.write_table(df, f'weather_{city}_{last_day_of_month[:-3]}.parquet')
     
 
-
-# NOTE: takes 20 mins, at an upload speed of 800kbps. Faster if your internet has a better upload speed
 def upload_to_gcs(bucket, last_day_of_month: str, locations: list):
     """
     Ref: https://cloud.google.com/storage/docs/uploading-objects#storage-upload-object-python
@@ -92,11 +71,8 @@ def upload_to_gcs(bucket, last_day_of_month: str, locations: list):
     :param local_file: source path & file-name
     :return:
     """
-    # WORKAROUND to prevent timeout for files > 6 MB on 800 kbps upload speed.
-    # (Ref: https://github.com/googleapis/python-storage/issues/74)
     storage.blob._MAX_MULTIPART_SIZE = 5 * 1024 * 1024  # 5 MB
     storage.blob._DEFAULT_CHUNKSIZE = 5 * 1024 * 1024  # 5 MB
-    # End of Workaround
 
     client = storage.Client()
     bucket = client.bucket(bucket)
@@ -117,7 +93,6 @@ default_args = {
     "retries": 1,
 }
 
-# NOTE: DAG declaration - using a Context Manager (an implicit way)
 with DAG(
     dag_id="weather_data_ingestion",
     schedule_interval="0 6 1 * *",
@@ -135,7 +110,6 @@ with DAG(
         },
     )
 
-    # TODO: Homework - research and try XCOM to communicate output values between 2 tasks/operators
     local_to_gcs_task = PythonOperator(
         task_id="local_to_gcs_task",
         python_callable=upload_to_gcs,

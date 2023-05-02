@@ -41,7 +41,6 @@ with DAG(
             WHERE address = '{loc}';"
         )
 
-        # Create a partitioned table from external table
         bq_create_partitioned_table_task = BigQueryInsertJobOperator(
             task_id=f"bq_create_{city}_partitioned_table_task",
             configuration={
@@ -54,9 +53,6 @@ with DAG(
 
         bq_create_partitioned_table_task_list.append(bq_create_partitioned_table_task)
 
-    # temp_bucket = os.popen('gcloud storage buckets list | grep "id: dataproc-temp"')
-    # temp_bucket = [line[4:-1] for line in temp_bucket][0]
-
     command = f"""gcloud dataproc jobs submit pyspark \
                 --cluster={SPARK_CLUSTER} \
                 --region=europe-west1 \
@@ -64,7 +60,6 @@ with DAG(
                 gs://{BUCKET}/code/data_transform_spark.py \
                 -- \
                 --dataset={BIGQUERY_DATASET}"""
-                # --temp_bucket={temp_bucket} \
 
     run_pyspark_script_task = BashOperator(
         task_id="run_pyspark_script",
