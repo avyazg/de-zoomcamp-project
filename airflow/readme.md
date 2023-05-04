@@ -58,3 +58,6 @@ gcloud dataproc jobs submit pyspark \
                 --dataset=de_project_dataset
 ```
 </i>
+
+Next steps here:
+<a href="https://github.com/avyazg/de-zoomcamp-project/blob/main/dashboard/readme.md">dashboard</a>
