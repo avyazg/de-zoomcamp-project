@@ -88,7 +88,7 @@ def upload_to_gcs(bucket, last_day_of_month: str, locations: list):
 
 default_args = {
     "owner": "airflow",
-    "start_date": datetime(2022,6,1),
+    "start_date": datetime(2022,5,1),
     "depends_on_past": False,
     "retries": 1,
 }

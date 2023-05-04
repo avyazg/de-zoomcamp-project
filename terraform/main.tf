@@ -53,4 +53,28 @@ resource "google_bigquery_dataset" "dataset" {
 resource "google_dataproc_cluster" "de-project-cluster" {
   name   = "de-project-cluster"
   region = var.region
+
+  cluster_config {
+    master_config {
+      num_instances = 1
+      machine_type = "n1-standard-2"
+      disk_config {
+        boot_disk_size_gb = 30
+      }
+    }
+
+    worker_config {
+      num_instances = 2
+      machine_type = "n1-standard-2"
+      disk_config {
+        boot_disk_size_gb = 30
+      }
+    }
+
+    gce_cluster_config {
+      service_account_scopes = [
+        "cloud-platform"
+      ]
+    }
+  }
 }

@@ -12,9 +12,15 @@ SPARK_CLUSTER = os.environ.get("SPARK_CLUSTER")
 
 locations = ['Ankara, Turkey', 'Istanbul, Turkey', 'Antalya, Turkey']
 
+today = '{{ ds }}'
+
+# this should be done on docker-build stage, but until this moment everything worked fine without this settings
+os.system(f'gcloud auth activate-service-account --key-file {os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")}')
+os.environ['CLOUDSDK_CORE_PROJECT'] = PROJECT_ID
+
 default_args = {
     "owner": "airflow",
-    "start_date": datetime(2022,6,1),
+    "start_date": datetime(2022,5,1),
     "depends_on_past": False,
     "retries": 1,
 }
@@ -27,7 +33,10 @@ with DAG(
     max_active_runs=1,
     tags=['de-project'],
 ) as dag:
-    
+
+    # to avoid uploading of current incomplete month due to manual dag triggering
+    current_month_1st = datetime.today().strftime(format='%Y-%m-%d')[:-2] + '01'
+
     bq_create_partitioned_table_task_list = []
 
     for loc in locations:
@@ -38,7 +47,7 @@ with DAG(
             PARTITION BY DATE(date_time) \
             AS \
             SELECT * FROM {BIGQUERY_DATASET}.external_table \
-            WHERE address = '{loc}';"
+            WHERE address = '{loc}' AND DATE_TRUNC(date_time, month) <> '{current_month_1st}';"
         )
 
         bq_create_partitioned_table_task = BigQueryInsertJobOperator(
