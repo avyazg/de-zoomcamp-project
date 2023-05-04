@@ -81,7 +81,7 @@ Sign up – you’ll be asked to do several typical steps, no need to use a cred
 Then find “Visual Crossing Weather” API and subscribe to the Basic free plan.\
 Go to the API documentation and find your api-key there in Header Parameters.
 
-#### Next
+### Next
 
 Get this repo (do git clone or do whatever you want)
 
