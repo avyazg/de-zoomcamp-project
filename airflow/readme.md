@@ -26,10 +26,10 @@ If you use some VM, forward port 8080 in order to view Airflow UI in the browser
 
 Go to http://localhost:8080 in your browser, credentials are: user – airflow, pass – airflow.
 
-Manually trigger 2 dags in the same order (top down). For clarity you can enter them and observe the process.\
+Manually trigger 2 dags in the same top down order (data_ingestion.py >> data_transformation.py). For clarity you can enter them and observe the process.\
 For each of 2 dags: click the name of dag, then click "trigger" (play button). And wait until it finishes 12 months (until green steps stop appearing).
  
-<i>In fact, right now all historical runs of the second dag produce the same result, because we triggered it after all scheduled runs of the first dag have been executed, and the second one takes the same external table each time. But the idea is that in production mode the second dag starts working in 3 hours after the first one (see the scheduled time: 06:00:00 and 09:00:00), so it will pick up the fresh result of the first one. For the training course it would be enough to set the schedule interval for the second dag into “@once” mode, but for better simulation of production mode I set it as it should be. 
+<i>In fact, right now all historical runs of the second dag produce the same result, because we triggered it after all scheduled runs of the first dag have been executed, and the second one takes the same external table each time. But the idea is that in production mode the second dag starts working in 3 hours after the first one (see the scheduled time: 06:00:00 and 09:00:00), so it will pick up the fresh result of the first one. For the training course it would be enough to set the schedule interval for the second dag into “@once” mode, but for better simulation of production mode I set it as it should be. You can interrupt dag execution when just one run (green column) is fully completed
 
 Again, you can face some problems on the “run_pyspark_script” task. In my case they were associated with permissions, and on different machines they were different. I tried to consider everything in my code, but if you fail, you can try following (separate steps out of order):  
 -	Check that your service account has the Service Account User role
