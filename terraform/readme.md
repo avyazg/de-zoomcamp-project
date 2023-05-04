@@ -14,7 +14,6 @@ If you fail using Terraform, complete these actions:
 - Input name “de-project-cluster”, region “europe-west1”, Zone doesn’t matter
 - Configure nodes -> Manager node: series: N1; Worker nodes: series: N1
 - Click Create
-- Enable Cloud Dataproc API (and maybe other APIs), add role Service Account User
 - Go to Compute Engine, and give permissions to each of your VMs (master, workers - for all of them):
     - Click on machine’s name -> Edit -> Access scopes: Allow full access to all cloud APIs -> Save
 </i>
